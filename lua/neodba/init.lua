@@ -55,6 +55,7 @@ function M.start()
   uv.read_start(M.process.stderr, function(err, data)
     assert(not err, err)
     if data then
+      vim.notify('SQL error', vim.log.levels.ERROR)
       print(data)
     else
       print("stderr end")
@@ -85,32 +86,50 @@ function M.restart()
   M.start()
 end
 
-local function selected_text()
-  local mode = vim.fn.mode()
-  local start_pos = vim.fn.getpos('v')
-  local end_pos = vim.fn.getpos('.')
+local function get_selected_text_in_visual_char_mode()
+  local start_pos = vim.fn.getpos('v') -- get visual mode position
+  local end_pos = vim.fn.getpos('.') -- cursor position
+
   local start_line = start_pos[2] - 1
+  local end_line = end_pos[2] - 1
+  local start_col = start_pos[3] - 1
+  local end_col = end_pos[3]
 
-  local end_line = 0
-  local start_col
-  local end_col
-  local sel_lines = {}
-  if mode == 'V' then
-    end_line = end_pos[2]
-    sel_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
-  else
-    end_line = end_pos[2] - 1
-    start_col = start_pos[3] - 1
-    end_col = end_pos[3]
-    sel_lines = vim.api.nvim_buf_get_text(0, start_line, start_col, end_line, end_col, {})
-  end
-
-  --print('positions:')
-  --M.pp(start_pos, end_pos)
+  local sel_lines = vim.api.nvim_buf_get_text(0, start_line, start_col, end_line, end_col, {})
 
   local sel_text_joined = table.concat(sel_lines, ' ')
-  M.pp('selection: ', sel_text_joined)
+  print(sel_text_joined .. '\n')
+  vim.notify(sel_text_joined, vim.log.levels.INFO)
+
   return sel_text_joined
+end
+
+local function get_selected_text_in_visual_line_mode()
+  -- NOTE: we need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
+
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
+
+  local start_line = math.max(0, start_pos[2] - 1)
+  local end_line = end_pos[2]
+  local sel_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
+
+  local sel_text_joined = table.concat(sel_lines, ' ')
+  print(sel_text_joined .. '\n')
+  vim.notify(sel_text_joined, vim.log.levels.INFO)
+
+  return sel_text_joined
+end
+
+local function selected_text()
+  local mode = vim.fn.mode() -- used to distinguish visual block/line mode
+
+  if mode == 'V' then
+    return get_selected_text_in_visual_line_mode()
+  else
+    return get_selected_text_in_visual_char_mode()
+  end
 end
 
 function M.exec_sql(sql)
