@@ -102,7 +102,7 @@ local function get_selected_text_in_visual_char_mode()
 
   local sel_lines = vim.api.nvim_buf_get_text(0, start_line, start_col, end_line, end_col, {})
 
-  local sel_text_joined = table.concat(sel_lines, ' ')
+  local sel_text_joined = vim.trim(table.concat(sel_lines, ' '))
   print(sel_text_joined .. '\n')
   vim.notify(sel_text_joined, vim.log.levels.INFO)
 
@@ -120,8 +120,9 @@ local function get_selected_text_in_visual_line_mode()
   local end_line = end_pos[2]
   local sel_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
 
-  local sel_text_joined = table.concat(sel_lines, ' ')
+  local sel_text_joined = vim.trim(table.concat(sel_lines, ' '))
   print(sel_text_joined .. '\n')
+  vim.notify(sel_text_joined, vim.log.levels.INFO)
 
   return sel_text_joined
 end
@@ -137,15 +138,28 @@ local function selected_text()
 end
 
 local function show_output()
-  local win_handles = vim.api.nvim_list_wins()
-  local output_win_open = M.output_winid and vim.tbl_contains(win_handles, M.output_winid)
-
-  if not output_win_open then
-    vim.cmd('rightbelow new')
-    M.output_winid = vim.fn.win_getid()
+  if not M.output_bufnr then
+    M.output_bufnr = vim.api.nvim_create_buf(false, false)
+    vim.api.nvim_buf_set_name(M.output_bufnr, 'SQL Output')
+    vim.api.nvim_buf_set_option(M.output_bufnr, 'buftype', 'nofile')
+    vim.api.nvim_buf_set_option(M.output_bufnr, 'bufhidden', 'hide')
   end
 
-  vim.fn.win_execute(M.output_winid, 'edit ' .. M.output_file_path, false)
+  local output_win_open = M.output_winid and vim.tbl_contains(vim.api.nvim_list_wins(), M.output_winid)
+
+  if not output_win_open then
+    local curr_winid = vim.fn.win_getid()
+    vim.cmd('rightbelow sb' .. M.output_bufnr)
+    M.output_winid = vim.fn.win_getid()
+    vim.fn.win_gotoid(curr_winid)
+  end
+
+  local lines = {}
+  if (u.file_exists(M.output_file_path)) then
+    lines = vim.fn.readfile(M.output_file_path)
+  end
+
+  vim.api.nvim_buf_set_lines(M.output_bufnr, 0, -1, false, lines)
 end
 
 function M.exec_sql(sql)

@@ -5,6 +5,10 @@ function M.pp(...)
   print(unpack(objects))
 end
 
+function M.file_exists(path)
+  return vim.loop.fs_stat(path)
+end
+
 function M.write_file(path, data)
   local fd = vim.loop.fs_open(path, 'a', 438) -- TODO: what is 438
   if fd then
