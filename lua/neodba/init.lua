@@ -157,6 +157,7 @@ local function show_output()
   local lines = {}
   if (u.file_exists(M.output_file_path)) then
     lines = vim.fn.readfile(M.output_file_path)
+    u.ltrim_blank_lines(lines)
   end
 
   vim.api.nvim_buf_set_lines(M.output_bufnr, 0, -1, false, lines)

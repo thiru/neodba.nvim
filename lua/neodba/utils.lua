@@ -5,6 +5,17 @@ function M.pp(...)
   print(unpack(objects))
 end
 
+function M.ltrim_blank_lines(lines)
+  if lines and #lines > 0 then
+    local idx = 1
+    local line = lines[1]
+    while vim.trim(line) == '' do
+      table.remove(lines, idx)
+      line = lines[idx]
+    end
+  end
+end
+
 function M.file_exists(path)
   return vim.loop.fs_stat(path)
 end
