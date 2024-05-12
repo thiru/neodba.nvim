@@ -1,4 +1,10 @@
+local u = require('neodba.utils')
+local uv = vim.loop
+
 local M = {
+  output_bufnr = nil, -- TODO: remove?
+  output_winid = nil,
+  output_file_path = 'db-result',
   process = {
     cmd = 'neodba',
     handle = nil,
@@ -9,19 +15,12 @@ local M = {
   }
 }
 
-function M.pp(...)
-  local objects = vim.tbl_map(vim.inspect, { ... })
-  print(unpack(objects))
-end
-
 function M.setup(config)
-  M.pp('neodba setup', config)
+  u.pp('neodba setup', config)
   vim.keymap.set({'n', 'v'}, '<leader><leader>', function() M.exec_sql() end, {desc = 'Exec SQL'})
 end
 
 function M.start()
-  local uv = vim.loop
-
   M.process.stdin = uv.new_pipe()
   M.process.stdout = uv.new_pipe()
   M.process.stderr = uv.new_pipe()
@@ -45,7 +44,10 @@ function M.start()
   uv.read_start(M.process.stdout, function(err, data)
     assert(not err, err)
     if data then
-      print(data)
+      local trimmed_data = vim.trim(data)
+      if #trimmed_data > 0 then
+        u.write_file(M.output_file_path, data)
+      end
     else
       print("stdout end")
     end
@@ -56,7 +58,10 @@ function M.start()
     assert(not err, err)
     if data then
       vim.notify('SQL error', vim.log.levels.ERROR)
-      print(data)
+      local trimmed_data = vim.trim(data)
+      if #trimmed_data > 0 then
+        u.write_file(M.output_file_path, data)
+      end
     else
       print("stderr end")
     end
@@ -68,11 +73,11 @@ function M.stop()
     return
   end
 
-  vim.loop.shutdown(
+  uv.shutdown(
     M.process.stdin,
     function()
       print("stdin shutdown")
-      vim.loop.close(
+      uv.close(
         M.process.handle,
         function()
           M.process.pid = 0
@@ -117,7 +122,6 @@ local function get_selected_text_in_visual_line_mode()
 
   local sel_text_joined = table.concat(sel_lines, ' ')
   print(sel_text_joined .. '\n')
-  vim.notify(sel_text_joined, vim.log.levels.INFO)
 
   return sel_text_joined
 end
@@ -132,23 +136,47 @@ local function selected_text()
   end
 end
 
+local function show_output()
+  local win_handles = vim.api.nvim_list_wins()
+  local output_win_open = M.output_winid and vim.tbl_contains(win_handles, M.output_winid)
+
+  if not output_win_open then
+    vim.cmd('rightbelow new')
+    M.output_winid = vim.fn.win_getid()
+  end
+
+  vim.fn.win_execute(M.output_winid, 'edit ' .. M.output_file_path, false)
+end
+
 function M.exec_sql(sql)
   if M.process.pid == 0 then
     M.start()
   end
 
   if not sql or #sql == 0 then
-    sql = selected_text() .. '\n'
+    sql = selected_text()
   end
 
-  vim.loop.write(
-    M.process.stdin,
-    sql,
-    function(err)
-      if err then
-        print('stdin error:', err)
-      end
-    end)
+  sql = vim.trim(sql)
+
+  if sql and #sql > 0 then
+    sql = sql .. '\n'
+
+    vim.fn.delete(M.output_file_path)
+
+    uv.write(
+      M.process.stdin,
+      sql,
+      function(err)
+        if err then
+          print('stdin error:', err)
+        end
+      end)
+
+    vim.cmd('sleep 250m')
+
+    show_output()
+  end
 end
 
 return M
