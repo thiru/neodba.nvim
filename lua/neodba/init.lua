@@ -112,6 +112,7 @@ end
 local function get_selected_text_in_visual_line_mode()
   -- NOTE: we need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
+  vim.cmd('normal gv')
 
   local start_pos = vim.fn.getpos("'<")
   local end_pos = vim.fn.getpos("'>")
@@ -137,7 +138,7 @@ local function selected_text()
   end
 end
 
-local function show_output()
+local function show_output(reselect_visual)
   if not M.output_bufnr then
     M.output_bufnr = vim.api.nvim_create_buf(false, false)
     vim.api.nvim_buf_set_name(M.output_bufnr, 'SQL Output')
@@ -149,9 +150,14 @@ local function show_output()
 
   if not output_win_open then
     local curr_winid = vim.fn.win_getid()
-    vim.cmd('rightbelow sb' .. M.output_bufnr)
+    vim.cmd('rightbelow sb' .. M.output_bufnr) -- Any visual selection would get lost here
     M.output_winid = vim.fn.win_getid()
     vim.fn.win_gotoid(curr_winid)
+
+    -- Reselect visual selection
+    if reselect_visual then
+      vim.cmd('normal gv')
+    end
   end
 
   local lines = {}
@@ -168,8 +174,10 @@ function M.exec_sql(sql)
     M.start()
   end
 
+  local is_visual_select = false
   if not sql or #sql == 0 then
     sql = selected_text()
+    is_visual_select = true
   end
 
   sql = vim.trim(sql)
@@ -190,7 +198,7 @@ function M.exec_sql(sql)
 
     vim.cmd('sleep 250m')
 
-    show_output()
+    show_output(is_visual_select)
   end
 end
 
