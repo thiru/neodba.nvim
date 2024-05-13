@@ -16,26 +16,6 @@ function M.ltrim_blank_lines(lines)
   end
 end
 
-function M.file_exists(path)
-  return vim.loop.fs_stat(path)
-end
-
-function M.ensure_exists(path)
-  if not M.file_exists(path) then
-    vim.fn.mkdir(path)
-  end
-end
-
-function M.write_file(path, data)
-  local fd = vim.loop.fs_open(path, 'a', 438) -- TODO: what is 438
-  if fd then
-    vim.loop.fs_write(fd, data, 0)
-    vim.loop.fs_close(fd)
-  else
-    vim.notify('Failed to write to: ' .. path, vim.log.levels.ERROR)
-  end
-end
-
 function M.clear_buffer(bufnr)
   if bufnr then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})

@@ -1,14 +1,7 @@
 local u = require('neodba.utils')
 local uv = vim.loop
 
-local config = {
-  output_dir = '.neodba/',
-  last_result_file = 'last-result.txt',
-}
-
 local M = {
-  config = config,
-  output_file = config.output_dir .. config.last_result_file,
   output_bufnr = nil,
   output_winid = nil,
   process = {
@@ -31,8 +24,6 @@ function M.start()
   M.process.stderr = uv.new_pipe()
 
   vim.notify('Starting neodba...' .. M.process.cmd, vim.log.levels.INFO)
-
-  u.ensure_exists(config.output_dir)
 
   -- Start process
   local handle, pid = uv.spawn(
@@ -57,7 +48,6 @@ function M.start()
           local trimmed_data = vim.trim(data)
           if #trimmed_data > 0 then
             M.show_output(data)
-            u.write_file(M.output_file, data)
           end
         else
           print("stdout end")
@@ -153,7 +143,6 @@ function M.exec_sql(sql)
     sql = sql .. '\n'
 
     u.clear_buffer(M.output_bufnr)
-    vim.fn.delete(M.output_file)
 
     uv.write(
       M.process.stdin,
