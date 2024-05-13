@@ -117,7 +117,7 @@ function M.show_output(data)
   u.append_to_buffer(M.output_bufnr, lines)
 end
 
-function M.get_sql()
+function M.get_sql_to_exec()
   local mode = vim.fn.mode()
 
   if mode == 'V' or mode == 'v' then
@@ -134,7 +134,7 @@ function M.exec_sql(sql)
   end
 
   if not sql or #sql == 0 then
-    sql = M.get_sql()
+    sql = M.get_sql_to_exec()
   end
 
   sql = vim.trim(sql)
