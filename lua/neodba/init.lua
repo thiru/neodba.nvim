@@ -127,13 +127,24 @@ function M.show_output(data)
   u.append_to_buffer(M.output_bufnr, lines)
 end
 
+function M.get_sql()
+  local mode = vim.fn.mode()
+
+  if mode == 'V' or mode == 'v' then
+    return u.selected_text()
+  end
+
+  vim.cmd('normal vip')
+  return u.selected_text()
+end
+
 function M.exec_sql(sql)
   if M.process.pid == 0 then
     M.start()
   end
 
   if not sql or #sql == 0 then
-    sql = u.selected_text()
+    sql = M.get_sql()
   end
 
   sql = vim.trim(sql)
