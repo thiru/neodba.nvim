@@ -9,7 +9,7 @@ local config = {
 local M = {
   config = config,
   output_file = config.output_dir .. config.last_result_file,
-  output_bufnr = nil, -- TODO: remove?
+  output_bufnr = nil,
   output_winid = nil,
   process = {
     cmd = 'neodba',
@@ -48,31 +48,38 @@ function M.start()
   M.process.pid = pid
 
   -- Read from stdout
-  uv.read_start(M.process.stdout, function(err, data)
-    assert(not err, err)
-    if data then
-      local trimmed_data = vim.trim(data)
-      if #trimmed_data > 0 then
-        u.write_file(M.output_file, data)
-      end
-    else
-      print("stdout end")
-    end
-  end)
+  uv.read_start(
+    M.process.stdout,
+    vim.schedule_wrap(
+      function(err, data)
+        assert(not err, err)
+        if data then
+          local trimmed_data = vim.trim(data)
+          if #trimmed_data > 0 then
+            M.show_output(data)
+            u.write_file(M.output_file, data)
+          end
+        else
+          print("stdout end")
+        end
+      end))
 
   -- Read from stderr
-  uv.read_start(M.process.stderr, function(err, data)
-    assert(not err, err)
-    if data then
-      vim.notify('SQL error', vim.log.levels.ERROR)
-      local trimmed_data = vim.trim(data)
-      if #trimmed_data > 0 then
-        u.write_file(M.output_file, data)
-      end
-    else
-      print("stderr end")
-    end
-  end)
+  uv.read_start(
+    M.process.stderr,
+    vim.schedule_wrap(
+      function(err, data)
+        assert(not err, err)
+        if data then
+          vim.notify('SQL error', vim.log.levels.ERROR)
+          local trimmed_data = vim.trim(data)
+          if #trimmed_data > 0 then
+            M.show_output(data)
+          end
+        else
+          print("stderr end")
+        end
+      end))
 end
 
 function M.stop()
@@ -98,7 +105,7 @@ function M.restart()
   M.start()
 end
 
-local function show_output(reselect_visual)
+function M.show_output(data)
   if not M.output_bufnr then
     M.output_bufnr = vim.api.nvim_create_buf(false, false)
     vim.api.nvim_buf_set_name(M.output_bufnr, 'SQL Output')
@@ -113,20 +120,11 @@ local function show_output(reselect_visual)
     vim.cmd('rightbelow sb' .. M.output_bufnr) -- Any visual selection would get lost here
     M.output_winid = vim.fn.win_getid()
     vim.fn.win_gotoid(curr_winid)
-
-    -- Reselect visual selection
-    if reselect_visual then
-      vim.cmd('normal gv')
-    end
   end
 
-  local lines = {}
-  if (u.file_exists(M.output_file)) then
-    lines = vim.fn.readfile(M.output_file)
-    u.ltrim_blank_lines(lines)
-  end
-
-  vim.api.nvim_buf_set_lines(M.output_bufnr, 0, -1, false, lines)
+  local lines = vim.split(data, '\n')
+  u.ltrim_blank_lines(lines)
+  u.append_to_buffer(M.output_bufnr, lines)
 end
 
 function M.exec_sql(sql)
@@ -134,10 +132,8 @@ function M.exec_sql(sql)
     M.start()
   end
 
-  local is_visual_select = false
   if not sql or #sql == 0 then
     sql = u.selected_text()
-    is_visual_select = true
   end
 
   sql = vim.trim(sql)
@@ -145,6 +141,7 @@ function M.exec_sql(sql)
   if sql and #sql > 0 then
     sql = sql .. '\n'
 
+    u.clear_buffer(M.output_bufnr)
     vim.fn.delete(M.output_file)
 
     uv.write(
@@ -155,10 +152,6 @@ function M.exec_sql(sql)
           print('stdin error:', err)
         end
       end)
-
-    vim.cmd('sleep 250m')
-
-    show_output(is_visual_select)
   end
 end
 

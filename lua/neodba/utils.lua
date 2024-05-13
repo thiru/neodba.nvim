@@ -36,6 +36,18 @@ function M.write_file(path, data)
   end
 end
 
+function M.clear_buffer(bufnr)
+  if bufnr then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+  end
+end
+
+function M.append_to_buffer(bufnr, lines)
+  if bufnr then
+    vim.api.nvim_buf_set_lines(bufnr, -2, -1, false, lines)
+  end
+end
+
 function M.selected_text_in_visual_char_mode()
   local start_pos = vim.fn.getpos('v') -- get visual mode position
   local end_pos = vim.fn.getpos('.') -- cursor position
