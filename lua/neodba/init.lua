@@ -15,7 +15,23 @@ local M = {
 }
 
 function M.setup()
-  vim.keymap.set({'n', 'v'}, '<leader><leader>', M.exec_sql, {desc = 'Exec SQL'})
+  vim.api.nvim_create_user_command(
+    'NeodbaExecSql',
+    M.exec_sql,
+    {bang = true,
+     desc = 'Execute SQL under cursor or what is visually selected'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaStopProcess',
+    M.stop,
+    {bang = true,
+     desc = 'Stop the neodba process'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaRestartProcess',
+    M.restart,
+    {bang = true,
+     desc = 'Restart the neodba process'})
 end
 
 function M.start()
