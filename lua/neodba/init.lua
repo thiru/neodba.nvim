@@ -22,7 +22,7 @@ local M = {
 }
 
 function M.setup()
-  vim.keymap.set({'n', 'v'}, '<leader><leader>', function() M.exec_sql() end, {desc = 'Exec SQL'})
+  vim.keymap.set({'n', 'v'}, '<leader><leader>', M.exec_sql, {desc = 'Exec SQL'})
 end
 
 function M.start()
