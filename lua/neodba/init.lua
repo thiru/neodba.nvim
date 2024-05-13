@@ -124,6 +124,7 @@ function M.show_output(data)
   if not output_win_open then
     local curr_winid = vim.fn.win_getid()
     vim.cmd('rightbelow sb' .. M.output_bufnr) -- Any visual selection would get lost here
+    vim.cmd('set nowrap')
     M.output_winid = vim.fn.win_getid()
     vim.fn.win_gotoid(curr_winid)
   end
