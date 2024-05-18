@@ -6,6 +6,7 @@ local M = {
   output_winid = nil,
   process = {
     cmd = 'neodba',
+    cmd_args = {'repl'},
     handle = nil,
     pid = 0,
     stderr = nil,
@@ -39,12 +40,12 @@ function M.start()
   M.process.stdout = uv.new_pipe()
   M.process.stderr = uv.new_pipe()
 
-  vim.notify('Starting neodba...' .. M.process.cmd, vim.log.levels.INFO)
+  vim.notify('Starting neodba...', vim.log.levels.INFO)
 
   -- Start process
   local handle, pid = uv.spawn(
     M.process.cmd,
-    {stdio = {M.process.stdin, M.process.stdout, M.process.stderr}},
+    {args = M.process.cmd_args, stdio = {M.process.stdin, M.process.stdout, M.process.stderr}},
     function(code, signal) -- on exit (doesn't seem to be getting called)
       print("exit code", code)
       print("exit signal", signal)
