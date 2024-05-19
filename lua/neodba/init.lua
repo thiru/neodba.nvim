@@ -1,17 +1,22 @@
 local u = require('neodba.utils')
 local uv = vim.loop
 
-local M = {
+local state = {
   output_bufnr = nil,
   output_winid = nil,
   process = {
-    cmd = 'neodba',
-    cmd_args = {'repl'},
     handle = nil,
     pid = 0,
     stderr = nil,
     stdin = nil,
     stdout = nil,
+  }
+}
+
+local M = {
+  process = {
+    cmd = 'neodba',
+    cmd_args = {'repl'},
   }
 }
 
@@ -42,28 +47,28 @@ function M.setup()
 end
 
 function M.start()
-  M.process.stdin = uv.new_pipe()
-  M.process.stdout = uv.new_pipe()
-  M.process.stderr = uv.new_pipe()
+  state.process.stdin = uv.new_pipe()
+  state.process.stdout = uv.new_pipe()
+  state.process.stderr = uv.new_pipe()
 
   vim.notify('Starting neodba...', vim.log.levels.DEBUG)
 
   -- Start process
   local handle, pid = uv.spawn(
     M.process.cmd,
-    {args = M.process.cmd_args, stdio = {M.process.stdin, M.process.stdout, M.process.stderr}},
+    {args = M.process.cmd_args, stdio = {state.process.stdin, state.process.stdout, state.process.stderr}},
     function(code, signal) -- on exit (doesn't seem to be getting called)
       print("exit code", code)
       print("exit signal", signal)
     end)
   print('neodba started (pid '.. pid .. ')')
 
-  M.process.handle = handle
-  M.process.pid = pid
+  state.process.handle = handle
+  state.process.pid = pid
 
   -- Read from stdout
   uv.read_start(
-    M.process.stdout,
+    state.process.stdout,
     vim.schedule_wrap(
       function(err, data)
         assert(not err, err)
@@ -79,7 +84,7 @@ function M.start()
 
   -- Read from stderr
   uv.read_start(
-    M.process.stderr,
+    state.process.stderr,
     vim.schedule_wrap(
       function(err, data)
         assert(not err, err)
@@ -96,19 +101,19 @@ function M.start()
 end
 
 function M.stop()
-  if M.process.pid == 0 then
+  if state.process.pid == 0 then
     return
   end
 
   uv.shutdown(
-    M.process.stdin,
+    state.process.stdin,
     function()
       print("stdin shutdown")
       uv.close(
-        M.process.handle,
+        state.process.handle,
         function()
-          M.process.pid = 0
-          print("process closed: " .. M.process.pid)
+          state.process.pid = 0
+          print("process closed: " .. state.process.pid)
         end)
     end)
 end
@@ -119,26 +124,26 @@ function M.restart()
 end
 
 function M.show_output(data)
-  if not M.output_bufnr then
-    M.output_bufnr = vim.api.nvim_create_buf(false, false)
-    vim.api.nvim_buf_set_name(M.output_bufnr, 'SQL Output')
-    vim.api.nvim_buf_set_option(M.output_bufnr, 'buftype', 'nofile')
-    vim.api.nvim_buf_set_option(M.output_bufnr, 'bufhidden', 'hide')
+  if not state.output_bufnr then
+    state.output_bufnr = vim.api.nvim_create_buf(false, false)
+    vim.api.nvim_buf_set_name(state.output_bufnr, 'SQL Output')
+    vim.api.nvim_buf_set_option(state.output_bufnr, 'buftype', 'nofile')
+    vim.api.nvim_buf_set_option(state.output_bufnr, 'bufhidden', 'hide')
   end
 
-  local output_win_open = M.output_winid and vim.tbl_contains(vim.api.nvim_list_wins(), M.output_winid)
+  local output_win_open = state.output_winid and vim.tbl_contains(vim.api.nvim_list_wins(), state.output_winid)
 
   if not output_win_open then
     local curr_winid = vim.fn.win_getid()
-    vim.cmd('rightbelow sb' .. M.output_bufnr) -- Any visual selection would get lost here
+    vim.cmd('rightbelow sb' .. state.output_bufnr) -- Any visual selection would get lost here
     vim.cmd('set nowrap')
-    M.output_winid = vim.fn.win_getid()
+    state.output_winid = vim.fn.win_getid()
     vim.fn.win_gotoid(curr_winid)
   end
 
   local lines = vim.split(data, '\n')
   u.ltrim_blank_lines(lines)
-  u.append_to_buffer(M.output_bufnr, lines)
+  u.append_to_buffer(state.output_bufnr, lines)
 end
 
 function M.get_sql_to_exec()
@@ -153,7 +158,7 @@ function M.get_sql_to_exec()
 end
 
 function M.exec_sql(sql)
-  if M.process.pid == 0 then
+  if state.process.pid == 0 then
     M.start()
   end
 
@@ -166,10 +171,10 @@ function M.exec_sql(sql)
   if sql and #sql > 0 then
     sql = sql .. '\n'
 
-    u.clear_buffer(M.output_bufnr)
+    u.clear_buffer(state.output_bufnr)
 
     uv.write(
-      M.process.stdin,
+      state.process.stdin,
       sql,
       function(err)
         if err then
