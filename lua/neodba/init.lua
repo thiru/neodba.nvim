@@ -40,7 +40,7 @@ function M.start()
   M.process.stdout = uv.new_pipe()
   M.process.stderr = uv.new_pipe()
 
-  vim.notify('Starting neodba...', vim.log.levels.INFO)
+  vim.notify('Starting neodba...', vim.log.levels.DEBUG)
 
   -- Start process
   local handle, pid = uv.spawn(
