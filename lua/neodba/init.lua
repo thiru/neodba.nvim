@@ -23,6 +23,12 @@ function M.setup()
      desc = 'Execute SQL under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaStartProcess',
+    M.start,
+    {bang = true,
+     desc = 'Start the neodba process'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaStopProcess',
     M.stop,
     {bang = true,
