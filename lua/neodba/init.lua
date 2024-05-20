@@ -54,11 +54,9 @@ function M.start()
     { args = M.process.cmd_args,
       cwd = vim.fn.getcwd(),
       stdio = {session.process.stdin, session.process.stdout, session.process.stderr}},
-    function(code, signal) -- on exit (doesn't seem to be getting called)
-      print("exit code", code)
-      print("exit signal", signal)
-    end)
-  print('neodba started (pid '.. pid .. ')')
+    nil)
+
+  vim.notify('Neodba started (pid '.. pid .. ')', vim.log.levels.DEBUG)
 
   session.process.handle = handle
   session.process.pid = pid
@@ -76,8 +74,6 @@ function M.start()
           if #trimmed_data > 0 then
             helpers.show_output(data)
           end
-        else
-          print("stdout end")
         end
       end))
 
@@ -93,8 +89,6 @@ function M.start()
           if #trimmed_data > 0 then
             helpers.show_output(data)
           end
-        else
-          print("stderr end")
         end
       end))
 
@@ -111,12 +105,11 @@ function M.stop()
   uv.shutdown(
     session.process.stdin,
     function()
-      print("stdin shutdown")
       uv.close(
         session.process.handle,
         function()
-          session.process.pid = 0
-          print("process closed: " .. session.process.pid)
+          session.process.closed = true
+          vim.notify('Neodba process closed: (pid = ' .. session.process.pid .. ')', vim.log.levels.DEBUG)
         end)
     end)
 end
@@ -130,6 +123,7 @@ function helpers.new_session()
   return {
     dir = vim.fn.getcwd(),
     process = {
+      closed = false,
       handle = nil,
       pid = 0,
       stderr = uv.new_pipe(),
@@ -140,7 +134,11 @@ function helpers.new_session()
 end
 
 function helpers.get_or_start_new_session()
-  return state.sessions[vim.fn.getcwd()] or M.start()
+  local session = state.sessions[vim.fn.getcwd()]
+  if session and not session.process.closed then
+    return session
+  end
+  return M.start()
 end
 
 function helpers.show_output(data)
@@ -196,7 +194,7 @@ function helpers.exec_sql(sql)
       sql,
       function(err)
         if err then
-          print('stdin error:', err)
+          vim.notify('Neodba stdin error:', vim.log.levels.ERROR)
         end
       end)
   end
