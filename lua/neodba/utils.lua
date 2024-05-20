@@ -51,7 +51,6 @@ end
 function M.selected_text_in_visual_line_mode()
   -- We need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
-  vim.cmd('normal gv')
 
   local start_pos = vim.fn.getpos("'<")
   local end_pos = vim.fn.getpos("'>")
