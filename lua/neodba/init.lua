@@ -54,7 +54,10 @@ function M.start()
     { args = M.process.cmd_args,
       cwd = vim.fn.getcwd(),
       stdio = {session.process.stdin, session.process.stdout, session.process.stderr}},
-    nil)
+    function (code, _)
+      vim.notify('Neodba exited with error code: ' .. code, vim.log.levels.ERROR)
+      session.process.alive = false
+    end)
 
   vim.notify('Neodba started (pid '.. pid .. ')', vim.log.levels.DEBUG)
 
@@ -98,7 +101,7 @@ end
 function M.stop()
   local session = helpers.get_or_start_new_session()
 
-  if session.process.pid == 0 then
+  if not session.process.alive then
     return
   end
 
@@ -108,7 +111,7 @@ function M.stop()
       uv.close(
         session.process.handle,
         function()
-          session.process.closed = true
+          session.process.alive = false
           vim.notify('Neodba process closed: (pid = ' .. session.process.pid .. ')', vim.log.levels.DEBUG)
         end)
     end)
@@ -123,7 +126,7 @@ function helpers.new_session()
   return {
     dir = vim.fn.getcwd(),
     process = {
-      closed = false,
+      alive = true,
       handle = nil,
       pid = 0,
       stderr = uv.new_pipe(),
@@ -135,7 +138,7 @@ end
 
 function helpers.get_or_start_new_session()
   local session = state.sessions[vim.fn.getcwd()]
-  if session and not session.process.closed then
+  if session and session.process.alive then
     return session
   end
   return M.start()
@@ -194,7 +197,7 @@ function helpers.exec_sql(sql)
       sql,
       function(err)
         if err then
-          vim.notify('Neodba stdin error:', vim.log.levels.ERROR)
+          vim.notify('Neodba stdin error: ' .. err, vim.log.levels.ERROR)
         end
       end)
   end
