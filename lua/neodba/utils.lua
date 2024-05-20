@@ -29,8 +29,11 @@ function M.append_to_buffer(bufnr, lines)
 end
 
 function M.selected_text_in_visual_char_mode()
-  local start_pos = vim.fn.getpos('v') -- get visual mode position
-  local end_pos = vim.fn.getpos('.') -- cursor position
+  -- We need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
+
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
 
   local start_line = start_pos[2] - 1
   local end_line = end_pos[2] - 1
@@ -46,7 +49,7 @@ function M.selected_text_in_visual_char_mode()
 end
 
 function M.selected_text_in_visual_line_mode()
-  -- NOTE: we need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
+  -- We need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
   vim.cmd('normal gv')
 
