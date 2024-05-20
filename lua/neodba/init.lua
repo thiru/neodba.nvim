@@ -1,29 +1,26 @@
 local u = require('neodba.utils')
 local uv = vim.loop
 
+local helpers = {}
 local state = {
   output_bufnr = nil,
   output_winid = nil,
-  process = {
-    handle = nil,
-    pid = 0,
-    stderr = nil,
-    stdin = nil,
-    stdout = nil,
-  }
+  sessions = {},
 }
 
 local M = {
+  helpers = helpers,
   process = {
     cmd = 'neodba',
     cmd_args = {'repl'},
-  }
+  },
+  state = state,
 }
 
 function M.setup()
   vim.api.nvim_create_user_command(
     'NeodbaExecSql',
-    M.exec_sql,
+    helpers.exec_sql,
     {bang = true,
      desc = 'Execute SQL under cursor or what is visually selected'})
 
@@ -47,35 +44,37 @@ function M.setup()
 end
 
 function M.start()
-  state.process.stdin = uv.new_pipe()
-  state.process.stdout = uv.new_pipe()
-  state.process.stderr = uv.new_pipe()
+  local session = helpers.new_session()
 
   vim.notify('Starting neodba...', vim.log.levels.DEBUG)
 
   -- Start process
   local handle, pid = uv.spawn(
     M.process.cmd,
-    {args = M.process.cmd_args, stdio = {state.process.stdin, state.process.stdout, state.process.stderr}},
+    { args = M.process.cmd_args,
+      cwd = vim.fn.getcwd(),
+      stdio = {session.process.stdin, session.process.stdout, session.process.stderr}},
     function(code, signal) -- on exit (doesn't seem to be getting called)
       print("exit code", code)
       print("exit signal", signal)
     end)
   print('neodba started (pid '.. pid .. ')')
 
-  state.process.handle = handle
-  state.process.pid = pid
+  session.process.handle = handle
+  session.process.pid = pid
+
+  state.sessions[session.dir] = session
 
   -- Read from stdout
   uv.read_start(
-    state.process.stdout,
+    session.process.stdout,
     vim.schedule_wrap(
       function(err, data)
         assert(not err, err)
         if data then
           local trimmed_data = vim.trim(data)
           if #trimmed_data > 0 then
-            M.show_output(data)
+            helpers.show_output(data)
           end
         else
           print("stdout end")
@@ -84,7 +83,7 @@ function M.start()
 
   -- Read from stderr
   uv.read_start(
-    state.process.stderr,
+    session.process.stderr,
     vim.schedule_wrap(
       function(err, data)
         assert(not err, err)
@@ -92,28 +91,32 @@ function M.start()
           vim.notify('SQL error', vim.log.levels.ERROR)
           local trimmed_data = vim.trim(data)
           if #trimmed_data > 0 then
-            M.show_output(data)
+            helpers.show_output(data)
           end
         else
           print("stderr end")
         end
       end))
+
+  return session
 end
 
 function M.stop()
-  if state.process.pid == 0 then
+  local session = helpers.get_or_start_new_session()
+
+  if session.process.pid == 0 then
     return
   end
 
   uv.shutdown(
-    state.process.stdin,
+    session.process.stdin,
     function()
       print("stdin shutdown")
       uv.close(
-        state.process.handle,
+        session.process.handle,
         function()
-          state.process.pid = 0
-          print("process closed: " .. state.process.pid)
+          session.process.pid = 0
+          print("process closed: " .. session.process.pid)
         end)
     end)
 end
@@ -123,7 +126,24 @@ function M.restart()
   M.start()
 end
 
-function M.show_output(data)
+function helpers.new_session()
+  return {
+    dir = vim.fn.getcwd(),
+    process = {
+      handle = nil,
+      pid = 0,
+      stderr = uv.new_pipe(),
+      stdin = uv.new_pipe(),
+      stdout = uv.new_pipe(),
+    },
+  }
+end
+
+function helpers.get_or_start_new_session()
+  return state.sessions[vim.fn.getcwd()] or M.start()
+end
+
+function helpers.show_output(data)
   if not state.output_bufnr then
     state.output_bufnr = vim.api.nvim_create_buf(false, false)
     vim.api.nvim_buf_set_name(state.output_bufnr, 'SQL Output')
@@ -146,7 +166,7 @@ function M.show_output(data)
   u.append_to_buffer(state.output_bufnr, lines)
 end
 
-function M.get_sql_to_exec()
+function helpers.get_sql_to_exec()
   local mode = vim.fn.mode()
 
   if mode == 'V' or mode == 'v' then
@@ -157,13 +177,11 @@ function M.get_sql_to_exec()
   return u.selected_text()
 end
 
-function M.exec_sql(sql)
-  if state.process.pid == 0 then
-    M.start()
-  end
+function helpers.exec_sql(sql)
+  local session = helpers.get_or_start_new_session()
 
   if not sql or #sql == 0 then
-    sql = M.get_sql_to_exec()
+    sql = helpers.get_sql_to_exec()
   end
 
   sql = vim.trim(sql)
@@ -174,7 +192,7 @@ function M.exec_sql(sql)
     u.clear_buffer(state.output_bufnr)
 
     uv.write(
-      state.process.stdin,
+      session.process.stdin,
       sql,
       function(err)
         if err then
