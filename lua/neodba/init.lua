@@ -25,6 +25,12 @@ function M.setup()
      desc = 'Execute SQL under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaGetColumnInfo',
+    M.column_info,
+    {bang = true,
+     desc = 'Get column info for table under cursor or what is visually selected'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaStartProcess',
     M.start,
     {bang = true,
@@ -180,6 +186,19 @@ function helpers.get_sql_to_exec()
   return u.selected_text(orig_cur_pos)
 end
 
+function helpers.get_table_name()
+  local mode = vim.fn.mode()
+
+  if mode == 'V' or mode == 'v' then
+    return u.selected_text()
+  end
+
+  local orig_cur_pos = vim.fn.getpos('.')
+
+  vim.cmd('normal viw')
+  return u.selected_text(orig_cur_pos)
+end
+
 function helpers.exec_sql(sql)
   local session = helpers.get_or_start_new_session()
 
@@ -191,6 +210,31 @@ function helpers.exec_sql(sql)
 
   if sql and #sql > 0 then
     sql = sql .. '\n'
+
+    u.clear_buffer(state.output_bufnr)
+
+    uv.write(
+      session.process.stdin,
+      sql,
+      function(err)
+        if err then
+          vim.notify('Neodba stdin error: ' .. err, vim.log.levels.ERROR)
+        end
+      end)
+  end
+end
+
+function M.column_info(table_name)
+  local session = helpers.get_or_start_new_session()
+
+  if not table_name or #table_name == 0 then
+    table_name = helpers.get_table_name()
+  end
+
+  table_name = vim.trim(table_name)
+
+  if table_name and #table_name > 0 then
+    local sql = '(get-columns ' .. table_name .. ')\n'
 
     u.clear_buffer(state.output_bufnr)
 
