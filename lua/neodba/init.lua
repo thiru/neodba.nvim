@@ -20,7 +20,7 @@ local M = {
 function M.setup()
   vim.api.nvim_create_user_command(
     'NeodbaExecSql',
-    helpers.exec_sql,
+    M.exec_sql,
     {bang = true,
      desc = 'Execute SQL under cursor or what is visually selected'})
 
@@ -199,7 +199,7 @@ function helpers.get_table_name()
   return u.selected_text(orig_cur_pos)
 end
 
-function helpers.exec_sql(sql)
+function M.exec_sql(sql)
   local session = helpers.get_or_start_new_session()
 
   if not sql or #sql == 0 then
