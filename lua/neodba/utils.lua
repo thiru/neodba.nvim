@@ -28,9 +28,13 @@ function M.append_to_buffer(bufnr, lines)
   end
 end
 
-function M.selected_text_in_visual_char_mode()
+function M.selected_text_in_visual_char_mode(cur_pos_to_restore)
+  local orig_cur_pos = cur_pos_to_restore or vim.fn.getpos('.')
+
   -- We need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
+
+  vim.fn.setpos('.', orig_cur_pos)
 
   local start_pos = vim.fn.getpos("'<")
   local end_pos = vim.fn.getpos("'>")
@@ -48,9 +52,13 @@ function M.selected_text_in_visual_char_mode()
   return sel_text_joined
 end
 
-function M.selected_text_in_visual_line_mode()
+function M.selected_text_in_visual_line_mode(cur_pos_to_restore)
+  local orig_cur_pos = cur_pos_to_restore or vim.fn.getpos('.')
+
   -- We need to escape visual mode as the '< and '> marks apply to the *last* visual mode selection
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<esc>", true, false, true), 'x', true)
+
+  vim.fn.setpos('.', orig_cur_pos)
 
   local start_pos = vim.fn.getpos("'<")
   local end_pos = vim.fn.getpos("'>")
@@ -65,13 +73,13 @@ function M.selected_text_in_visual_line_mode()
   return sel_text_joined
 end
 
-function M.selected_text()
+function M.selected_text(cur_pos_to_restore)
   local mode = vim.fn.mode()
 
   if mode == 'V' then
-    return M.selected_text_in_visual_line_mode()
+    return M.selected_text_in_visual_line_mode(cur_pos_to_restore)
   else
-    return M.selected_text_in_visual_char_mode()
+    return M.selected_text_in_visual_char_mode(cur_pos_to_restore)
   end
 end
 

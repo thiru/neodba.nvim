@@ -174,8 +174,10 @@ function helpers.get_sql_to_exec()
     return u.selected_text()
   end
 
+  local orig_cur_pos = vim.fn.getpos('.')
+
   vim.cmd('normal vip')
-  return u.selected_text()
+  return u.selected_text(orig_cur_pos)
 end
 
 function helpers.exec_sql(sql)
