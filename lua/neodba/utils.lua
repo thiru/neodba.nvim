@@ -5,6 +5,19 @@ function M.pp(...)
   print(unpack(objects))
 end
 
+function M.is_empty(val)
+  if val == nil then
+    return true
+  end
+
+  local t = type(val)
+  if t == 'string' or t == 'table' then
+    return #val
+  end
+
+  return false
+end
+
 function M.ltrim_blank_lines(lines)
   if lines and #lines > 0 then
     local idx = 1
@@ -81,6 +94,10 @@ function M.selected_text(cur_pos_to_restore)
   else
     return M.selected_text_in_visual_char_mode(cur_pos_to_restore)
   end
+end
+
+function M.download(src_url, dest_path)
+  
 end
 
 return M
