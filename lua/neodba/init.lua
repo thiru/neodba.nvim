@@ -154,8 +154,8 @@ function helpers.show_output(data)
   if not state.output_bufnr then
     state.output_bufnr = vim.api.nvim_create_buf(false, false)
     vim.api.nvim_buf_set_name(state.output_bufnr, 'SQL Output')
-    vim.api.nvim_buf_set_option(state.output_bufnr, 'buftype', 'nofile')
-    vim.api.nvim_buf_set_option(state.output_bufnr, 'bufhidden', 'hide')
+    vim.api.nvim_set_option_value('buftype', 'nofile', {buf = state.output_bufnr})
+    vim.api.nvim_set_option_value('bufhidden', 'hide', {buf = state.output_bufnr})
   end
 
   local output_win_open = state.output_winid and vim.tbl_contains(vim.api.nvim_list_wins(), state.output_winid)
