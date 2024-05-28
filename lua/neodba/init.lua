@@ -25,6 +25,12 @@ function M.setup()
      desc = 'Execute SQL under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaGetDatabaseInfo',
+    M.database_info,
+    {bang = true,
+     desc = 'Get metadata about the database and the current connection to it'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetColumnInfo',
     M.column_info,
     {bang = true,
@@ -222,6 +228,23 @@ function M.exec_sql(sql)
         end
       end)
   end
+end
+
+function M.database_info()
+  local session = helpers.get_or_start_new_session()
+
+  local sql = '(get-database-info)\n'
+
+  u.clear_buffer(state.output_bufnr)
+
+  uv.write(
+    session.process.stdin,
+    sql,
+    function(err)
+      if err then
+        vim.notify('Neodba stdin error: ' .. err, vim.log.levels.ERROR)
+      end
+    end)
 end
 
 function M.column_info(table_name)
