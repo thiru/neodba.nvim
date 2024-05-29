@@ -31,10 +31,46 @@ function M.setup()
      desc = 'Get metadata about the database and the current connection to it'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaGetCatalogs',
+    function() M.get_db_metadata('(get-catalogs)') end,
+    {bang = true,
+     desc = 'Get all catalogs'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaGetSchemas',
+    function() M.get_db_metadata('(get-schemas)') end,
+    {bang = true,
+     desc = 'Get all schemas'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaGetTables',
+    function() M.get_db_metadata('(get-tables)') end,
+    {bang = true,
+     desc = 'Get all tables'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaGetViews',
+    function() M.get_db_metadata('(get-views)') end,
+    {bang = true,
+     desc = 'Get all views'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetColumnInfo',
     M.column_info,
     {bang = true,
      desc = 'Get column info for table under cursor or what is visually selected'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaGetFunctions',
+    function() M.get_db_metadata('(get-functions)') end,
+    {bang = true,
+     desc = 'Get all functions'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaGetProcedures',
+    function() M.get_db_metadata('(get-procedures)') end,
+    {bang = true,
+     desc = 'Get all procedures'})
 
   vim.api.nvim_create_user_command(
     'NeodbaStartProcess',
