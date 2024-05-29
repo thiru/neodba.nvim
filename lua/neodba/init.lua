@@ -26,7 +26,7 @@ function M.setup()
 
   vim.api.nvim_create_user_command(
     'NeodbaGetDatabaseInfo',
-    M.database_info,
+    function() M.get_db_metadata('(get-database-info)') end,
     {bang = true,
      desc = 'Get metadata about the database and the current connection to it'})
 
@@ -230,10 +230,10 @@ function M.exec_sql(sql)
   end
 end
 
-function M.database_info()
+function M.get_db_metadata(query)
   local session = helpers.get_or_start_new_session()
 
-  local sql = '(get-database-info)\n'
+  local sql = query .. '\n'
 
   u.clear_buffer(state.output_bufnr)
 
@@ -248,8 +248,6 @@ function M.database_info()
 end
 
 function M.column_info(table_name)
-  local session = helpers.get_or_start_new_session()
-
   if not table_name or #table_name == 0 then
     table_name = helpers.get_table_name()
   end
@@ -257,18 +255,8 @@ function M.column_info(table_name)
   table_name = vim.trim(table_name)
 
   if table_name and #table_name > 0 then
-    local sql = '(get-columns ' .. table_name .. ')\n'
-
-    u.clear_buffer(state.output_bufnr)
-
-    uv.write(
-      session.process.stdin,
-      sql,
-      function(err)
-        if err then
-          vim.notify('Neodba stdin error: ' .. err, vim.log.levels.ERROR)
-        end
-      end)
+    local query = '(get-columns ' .. table_name .. ')\n'
+    M.get_db_metadata(query)
   end
 end
 
