@@ -1,5 +1,4 @@
 local u = require('neodba.utils')
-local uv = vim.loop
 
 local helpers = {}
 local state = {
@@ -97,7 +96,7 @@ function M.start()
   vim.notify('Starting neodba...', vim.log.levels.DEBUG)
 
   -- Start process
-  local handle, pid = uv.spawn(
+  local handle, pid = vim.uv.spawn(
     M.process.cmd,
     { args = M.process.cmd_args,
       cwd = vim.fn.getcwd(),
@@ -115,7 +114,7 @@ function M.start()
   state.sessions[session.dir] = session
 
   -- Read from stdout
-  uv.read_start(
+  vim.uv.read_start(
     session.process.stdout,
     vim.schedule_wrap(
       function(err, data)
@@ -129,7 +128,7 @@ function M.start()
       end))
 
   -- Read from stderr
-  uv.read_start(
+  vim.uv.read_start(
     session.process.stderr,
     vim.schedule_wrap(
       function(err, data)
@@ -153,10 +152,10 @@ function M.stop()
     return
   end
 
-  uv.shutdown(
+  vim.uv.shutdown(
     session.process.stdin,
     function()
-      uv.close(
+      vim.uv.close(
         session.process.handle,
         function()
           session.process.alive = false
@@ -177,9 +176,9 @@ function helpers.new_session()
       alive = true,
       handle = nil,
       pid = 0,
-      stderr = uv.new_pipe(),
-      stdin = uv.new_pipe(),
-      stdout = uv.new_pipe(),
+      stderr = vim.uv.new_pipe(),
+      stdin = vim.uv.new_pipe(),
+      stdout = vim.uv.new_pipe(),
     },
   }
 end
@@ -255,7 +254,7 @@ function M.exec_sql(sql)
 
     u.clear_buffer(state.output_bufnr)
 
-    uv.write(
+    vim.uv.write(
       session.process.stdin,
       sql,
       function(err)
@@ -273,7 +272,7 @@ function M.get_db_metadata(query)
 
   u.clear_buffer(state.output_bufnr)
 
-  uv.write(
+  vim.uv.write(
     session.process.stdin,
     sql,
     function(err)
