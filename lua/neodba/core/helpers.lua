@@ -38,6 +38,7 @@ function M.show_output(state, data)
     local curr_winid = vim.fn.win_getid()
     vim.cmd('rightbelow sb' .. state.output_bufnr) -- Any visual selection would get lost here
     vim.cmd('set nowrap')
+    u.resize_height(40)
     state.output_winid = vim.fn.win_getid()
     vim.fn.win_gotoid(curr_winid)
   end

@@ -83,4 +83,11 @@ function M.selected_text(cur_pos_to_restore)
   end
 end
 
+function M.resize_height(percentage)
+  local total_height = vim.api.nvim_get_option_value("lines", {}) -
+                       vim.api.nvim_get_option_value("cmdheight", {})
+  local new_height = math.floor(total_height * (percentage / 100))
+  vim.api.nvim_win_set_height(0, new_height)
+end
+
 return M
