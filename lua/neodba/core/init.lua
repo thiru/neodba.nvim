@@ -90,6 +90,17 @@ function M.define_user_commands()
      desc = 'Restart the neodba process'})
 end
 
+function M.set_default_keymaps()
+  vim.keymap.set({'n', 'v'}, '<C-CR>', '<CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
+  vim.keymap.set('i', '<C-CR>', '<C-O><CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
+  vim.keymap.set('n', '<localleader>dm', '<CMD>NeodbaGetDatabaseInfo<CR>', {desc = 'Neodba - Get database info'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dc', '<CMD>NeodbaGetColumnInfo<CR>', {desc = 'Neodba - Get column info'})
+  vim.keymap.set({'n', 'v'}, '<localleader>ds', '<CMD>NeodbaGetSchemas<CR>', {desc = 'Neodba - Get all schemas'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dt', '<CMD>NeodbaGetTables<CR>', {desc = 'Neodba - Get all tables'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dv', '<CMD>NeodbaGetViews<CR>', {desc = 'Neodba - Get all views'})
+  vim.keymap.set({'n', 'v'}, '<localleader>df', '<CMD>NeodbaGetFunctions<CR>', {desc = 'Neodba - Get all functions'})
+end
+
 function M.start()
   local session = h.new_session()
 
