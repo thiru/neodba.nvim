@@ -1,5 +1,4 @@
 local h = require('neodba.core.helpers')
-local u = require('neodba.utils')
 
 local state = {
   output_bufnr = nil,
@@ -192,8 +191,6 @@ function M.exec_sql(sql)
   if sql and #sql > 0 then
     sql = sql .. '\n'
 
-    u.clear_buffer(state.output_bufnr)
-
     vim.uv.write(
       session.process.stdin,
       sql,
@@ -209,8 +206,6 @@ function M.get_db_metadata(query)
   local session = h.get_existing_session(state) or M.start()
 
   local sql = query .. '\n'
-
-  u.clear_buffer(state.output_bufnr)
 
   vim.uv.write(
     session.process.stdin,

@@ -24,11 +24,11 @@ function M.get_existing_session(state)
   return nil
 end
 
-function M.show_output(state, data)
+-- TODO: remove this or support via user-defined option
+function M.show_output_from_data(state, data)
   if not state.output_bufnr then
     state.output_bufnr = vim.api.nvim_create_buf(false, false)
-    vim.api.nvim_buf_set_name(state.output_bufnr, 'SQL Output')
-    vim.api.nvim_set_option_value('buftype', 'nofile', {buf = state.output_bufnr})
+    vim.api.nvim_buf_set_name(state.output_bufnr, 'sql-output.md')
     vim.api.nvim_set_option_value('bufhidden', 'hide', {buf = state.output_bufnr})
   end
 
@@ -45,7 +45,43 @@ function M.show_output(state, data)
 
   local lines = vim.split(data, '\n')
   u.ltrim_blank_lines(lines)
+  u.clear_buffer(state.output_bufnr)
   u.append_to_buffer(state.output_bufnr, lines)
+  vim.api.nvim_buf_call(state.output_bufnr, function()
+    vim.cmd('silent! write!')
+    vim.cmd('edit!') -- NOTE: reloading to trigger Markdown plugin render
+  end)
+end
+
+function M.show_output_from_file(state)
+  if not state.output_bufnr then
+    state.output_bufnr = vim.fn.bufadd('sql-output.md')
+  end
+
+  local output_win_open = state.output_winid and vim.tbl_contains(vim.api.nvim_list_wins(), state.output_winid)
+
+  if not output_win_open then
+    state.output_winid = vim.api.nvim_open_win(state.output_bufnr, false, {split='below'})
+    vim.api.nvim_set_option_value('wrap', false, {win=state.output_winid})
+  end
+
+  if vim.api.nvim_buf_is_valid(state.output_bufnr) then
+    vim.api.nvim_buf_call(state.output_bufnr, function()
+      vim.cmd('edit!')
+    end)
+  else
+    vim.notify('Neodba: Failed to show SQL result (buffer is invalid: ' .. state.output_bufnr .. ')', vim.log.levels.ERROR)
+  end
+end
+
+function M.show_output(state, data)
+  local load_from_file = true
+
+  if load_from_file then
+    M.show_output_from_file(state)
+  else
+    M.show_output_from_data(state, data)
+  end
 end
 
 function M.get_sql_to_exec()
