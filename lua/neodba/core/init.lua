@@ -65,6 +65,12 @@ function M.define_user_commands()
      desc = 'Get all functions'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaGetFunctionDefinition',
+    M.function_defn,
+    {bang = true,
+     desc = 'Get definition of function under cursor or what is visually selected'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetProcedures',
     function() M.get_db_metadata('(get-procedures)') end,
     {bang = true,
@@ -98,6 +104,7 @@ function M.set_default_keymaps()
   vim.keymap.set({'n', 'v'}, '<localleader>dt', '<CMD>NeodbaGetTables<CR>', {desc = 'Neodba - Get all tables'})
   vim.keymap.set({'n', 'v'}, '<localleader>dv', '<CMD>NeodbaGetViews<CR>', {desc = 'Neodba - Get all views'})
   vim.keymap.set({'n', 'v'}, '<localleader>df', '<CMD>NeodbaGetFunctions<CR>', {desc = 'Neodba - Get all functions'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dF', '<CMD>NeodbaGetFunctionDefinition<CR>', {desc = 'Neodba - Get function defintion'})
 end
 
 function M.start()
@@ -219,13 +226,26 @@ end
 
 function M.column_info(table_name)
   if not table_name or #table_name == 0 then
-    table_name = h.get_table_name()
+    table_name = h.get_word_under_cursor()
   end
 
   table_name = vim.trim(table_name)
 
   if table_name and #table_name > 0 then
     local query = '(get-columns ' .. table_name .. ')\n'
+    M.get_db_metadata(query)
+  end
+end
+
+function M.function_defn(func_name)
+  if not func_name or #func_name == 0 then
+    func_name = h.get_word_under_cursor()
+  end
+
+  func_name = vim.trim(func_name)
+
+  if func_name and #func_name > 0 then
+    local query = '(get-function-defn ' .. func_name .. ')\n'
     M.get_db_metadata(query)
   end
 end

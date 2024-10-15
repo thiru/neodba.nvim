@@ -97,7 +97,7 @@ function M.get_sql_to_exec()
   return u.selected_text(orig_cur_pos)
 end
 
-function M.get_table_name()
+function M.get_word_under_cursor()
   local mode = vim.fn.mode()
 
   if mode == 'V' or mode == 'v' then
