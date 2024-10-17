@@ -53,6 +53,12 @@ function M.define_user_commands()
      desc = 'Get all views'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaGetViewDefinition',
+    M.view_defn,
+    {bang = true,
+     desc = 'Get definition of view under cursor or what is visually selected'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetColumnInfo',
     M.column_info,
     {bang = true,
@@ -103,6 +109,7 @@ function M.set_default_keymaps()
   vim.keymap.set({'n', 'v'}, '<localleader>ds', '<CMD>NeodbaGetSchemas<CR>', {desc = 'Neodba - Get all schemas'})
   vim.keymap.set({'n', 'v'}, '<localleader>dt', '<CMD>NeodbaGetTables<CR>', {desc = 'Neodba - Get all tables'})
   vim.keymap.set({'n', 'v'}, '<localleader>dv', '<CMD>NeodbaGetViews<CR>', {desc = 'Neodba - Get all views'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dV', '<CMD>NeodbaGetViewDefinition<CR>', {desc = 'Neodba - Get view definition'})
   vim.keymap.set({'n', 'v'}, '<localleader>df', '<CMD>NeodbaGetFunctions<CR>', {desc = 'Neodba - Get all functions'})
   vim.keymap.set({'n', 'v'}, '<localleader>dF', '<CMD>NeodbaGetFunctionDefinition<CR>', {desc = 'Neodba - Get function defintion'})
 end
@@ -233,6 +240,19 @@ function M.column_info(table_name)
 
   if table_name and #table_name > 0 then
     local query = '(get-columns ' .. table_name .. ')\n'
+    M.get_db_metadata(query)
+  end
+end
+
+function M.view_defn(view_name)
+  if not view_name or #view_name == 0 then
+    view_name = h.get_word_under_cursor()
+  end
+
+  view_name = vim.trim(view_name)
+
+  if view_name and #view_name > 0 then
+    local query = '(get-view-defn ' .. view_name .. ')\n'
     M.get_db_metadata(query)
   end
 end
