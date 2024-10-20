@@ -1,6 +1,19 @@
 local u = require('neodba.utils')
 
-local M = {}
+local M = {
+  cmds = {
+    get_database_info = '(get-database-info)',
+    get_catalogs = '(get-catalogs)',
+    get_schemas = '(get-schemas)',
+    get_tables = '(get-tables)',
+    get_views = '(get-views)',
+    get_functions = '(get-functions)',
+    get_procedures = '(get-procedures)'
+  },
+  telescope_cmds = {
+    get_views = '(get-views plain)',
+  }
+}
 
 function M.new_session()
   return {
@@ -53,7 +66,7 @@ function M.show_output_from_data(state, data)
   end)
 end
 
-function M.show_output_from_file(state)
+function M.show_ouput_in_split(state)
   if not state.output_bufnr then
     state.output_bufnr = vim.fn.bufadd('sql-output.md')
   end
@@ -74,11 +87,22 @@ function M.show_output_from_file(state)
   end
 end
 
+function M.show_output_from_file(state, data)
+  local lines = vim.split(vim.trim(data), '\n')
+  local last_line = lines[#lines]
+
+  if last_line == M.telescope_cmds.get_views then
+    M.show_output_in_telescope()
+  else
+    M.show_ouput_in_split(state)
+  end
+end
+
 function M.show_output(state, data)
   local load_from_file = true
 
   if load_from_file then
-    M.show_output_from_file(state)
+    M.show_output_from_file(state, data)
   else
     M.show_output_from_data(state, data)
   end
