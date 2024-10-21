@@ -1,102 +1,121 @@
 local h = require('neodba.core.helpers')
 
-local state = {
-  output_bufnr = nil,
-  output_winid = nil,
-  sessions = {},
-}
-
 local M = {
   helpers = h,
-  process = {
-    cmd = 'neodba',
-    cmd_args = {'repl'},
-  },
-  state = state,
 }
 
 function M.define_user_commands()
   vim.api.nvim_create_user_command(
     'NeodbaExecSql',
-    M.exec_sql,
+    h.exec_sql,
     {bang = true,
      desc = 'Execute SQL under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetDatabaseInfo',
-    function() M.get_db_metadata('(get-database-info)') end,
+    function() h.get_db_metadata(h.cmds.get_database_info) end,
     {bang = true,
      desc = 'Get metadata about the database and the current connection to it'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetCatalogs',
-    function() M.get_db_metadata('(get-catalogs)') end,
+    function() h.get_db_metadata(h.cmds.get_catalogs) end,
     {bang = true,
      desc = 'Get all catalogs'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetSchemas',
-    function() M.get_db_metadata('(get-schemas)') end,
+    function() h.get_db_metadata(h.cmds.get_schemas) end,
     {bang = true,
      desc = 'Get all schemas'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetTables',
-    function() M.get_db_metadata('(get-tables)') end,
+    function() h.get_db_metadata(h.cmds.get_tables) end,
     {bang = true,
      desc = 'Get all tables'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaFindTables',
+    function() h.get_db_metadata(h.telescope_cmds.get_tables) end,
+    {bang = true,
+     desc = 'Find table to show all records'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetViews',
-    function() M.get_db_metadata('(get-views)') end,
+    function() h.get_db_metadata(h.cmds.get_views) end,
     {bang = true,
      desc = 'Get all views'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaFindViewDefinition',
+    function() h.get_db_metadata(h.telescope_cmds.get_views) end,
+    {bang = true,
+     desc = 'Find definition of view'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetViewDefinition',
-    M.view_defn,
+    h.view_defn,
     {bang = true,
      desc = 'Get definition of view under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetColumnInfo',
-    M.column_info,
+    h.column_info,
     {bang = true,
      desc = 'Get column info for table under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetFunctions',
-    function() M.get_db_metadata('(get-functions)') end,
+    function() h.get_db_metadata(h.cmds.get_functions) end,
     {bang = true,
      desc = 'Get all functions'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaFindFunctions',
+    function() h.get_db_metadata(h.telescope_cmds.get_functions) end,
+    {bang = true,
+     desc = 'Find definition of function'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaGetFunctionDefinition',
-    M.function_defn,
+    h.function_defn,
     {bang = true,
      desc = 'Get definition of function under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaGetProcedures',
-    function() M.get_db_metadata('(get-procedures)') end,
+    function() h.get_db_metadata(h.cmds.get_procedures) end,
     {bang = true,
      desc = 'Get all procedures'})
 
   vim.api.nvim_create_user_command(
+    'NeodbaFindProcedures',
+    function() h.get_db_metadata(h.telescope_cmds.get_procedures) end,
+    {bang = true,
+     desc = 'Find definition of procedure'})
+
+  vim.api.nvim_create_user_command(
+    'NeodbaGetProcedureDefinition',
+    h.procedure_defn,
+    {bang = true,
+     desc = 'Get definition of procedure under cursor or what is visually selected'})
+
+  vim.api.nvim_create_user_command(
     'NeodbaStartProcess',
-    M.start,
+    h.start,
     {bang = true,
      desc = 'Start the neodba process'})
 
   vim.api.nvim_create_user_command(
     'NeodbaStopProcess',
-    M.stop,
+    h.stop,
     {bang = true,
      desc = 'Stop the neodba process'})
 
   vim.api.nvim_create_user_command(
     'NeodbaRestartProcess',
-    M.restart,
+    h.restart,
     {bang = true,
      desc = 'Restart the neodba process'})
 end
@@ -107,167 +126,17 @@ function M.set_default_keymaps()
   vim.keymap.set('n', '<localleader>dm', '<CMD>NeodbaGetDatabaseInfo<CR>', {desc = 'Neodba - Get database info'})
   vim.keymap.set({'n', 'v'}, '<localleader>dc', '<CMD>NeodbaGetColumnInfo<CR>', {desc = 'Neodba - Get column info'})
   vim.keymap.set({'n', 'v'}, '<localleader>ds', '<CMD>NeodbaGetSchemas<CR>', {desc = 'Neodba - Get all schemas'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dt', '<CMD>NeodbaGetTables<CR>', {desc = 'Neodba - Get all tables'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dv', '<CMD>NeodbaGetViews<CR>', {desc = 'Neodba - Get all views'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dV', '<CMD>NeodbaGetViewDefinition<CR>', {desc = 'Neodba - Get view definition'})
-  vim.keymap.set({'n', 'v'}, '<localleader>df', '<CMD>NeodbaGetFunctions<CR>', {desc = 'Neodba - Get all functions'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dF', '<CMD>NeodbaGetFunctionDefinition<CR>', {desc = 'Neodba - Get function defintion'})
-end
-
-function M.start()
-  local session = h.new_session()
-
-  vim.notify('Starting neodba...', vim.log.levels.DEBUG)
-
-  -- Start process
-  local handle, pid = vim.uv.spawn(
-    M.process.cmd,
-    { args = M.process.cmd_args,
-      cwd = vim.fn.getcwd(),
-      stdio = {session.process.stdin, session.process.stdout, session.process.stderr}},
-    function (code, _)
-      vim.notify('Neodba exited with error code: ' .. code, vim.log.levels.ERROR)
-      session.process.alive = false
-    end)
-
-  vim.notify('Neodba started (pid '.. pid .. ')', vim.log.levels.DEBUG)
-
-  session.process.handle = handle
-  session.process.pid = pid
-
-  state.sessions[session.dir] = session
-
-  -- Read from stdout
-  vim.uv.read_start(
-    session.process.stdout,
-    vim.schedule_wrap(
-      function(err, data)
-        assert(not err, err)
-        if data then
-          local trimmed_data = vim.trim(data)
-          if #trimmed_data > 0 then
-            h.show_output(state, data)
-          end
-        end
-      end))
-
-  -- Read from stderr
-  vim.uv.read_start(
-    session.process.stderr,
-    vim.schedule_wrap(
-      function(err, data)
-        assert(not err, err)
-        if data then
-          vim.notify('SQL error', vim.log.levels.ERROR)
-          local trimmed_data = vim.trim(data)
-          if #trimmed_data > 0 then
-            h.show_output(state, data)
-          end
-        end
-      end))
-
-  return session
-end
-
-function M.stop()
-  local session = h.get_existing_session(state) or M.start()
-
-  if not session.process.alive then
-    return
-  end
-
-  vim.uv.shutdown(
-    session.process.stdin,
-    function()
-      vim.uv.close(
-        session.process.handle,
-        function()
-          session.process.alive = false
-          vim.notify('Neodba process closed: (pid = ' .. session.process.pid .. ')', vim.log.levels.DEBUG)
-        end)
-    end)
-end
-
-function M.restart()
-  M.stop()
-  M.start()
-end
-
-function M.exec_sql(sql)
-  local session = h.get_existing_session(state) or M.start()
-
-  if not sql or #sql == 0 then
-    sql = h.get_sql_to_exec()
-  end
-
-  sql = vim.trim(sql)
-
-  if sql and #sql > 0 then
-    sql = sql .. '\n'
-
-    vim.uv.write(
-      session.process.stdin,
-      sql,
-      function(err)
-        if err then
-          vim.notify('Neodba stdin error: ' .. err, vim.log.levels.ERROR)
-        end
-      end)
-  end
-end
-
-function M.get_db_metadata(query)
-  local session = h.get_existing_session(state) or M.start()
-
-  local sql = query .. '\n'
-
-  vim.uv.write(
-    session.process.stdin,
-    sql,
-    function(err)
-      if err then
-        vim.notify('Neodba stdin error: ' .. err, vim.log.levels.ERROR)
-      end
-    end)
-end
-
-function M.column_info(table_name)
-  if not table_name or #table_name == 0 then
-    table_name = h.get_word_under_cursor()
-  end
-
-  table_name = vim.trim(table_name)
-
-  if table_name and #table_name > 0 then
-    local query = '(get-columns ' .. table_name .. ')\n'
-    M.get_db_metadata(query)
-  end
-end
-
-function M.view_defn(view_name)
-  if not view_name or #view_name == 0 then
-    view_name = h.get_word_under_cursor()
-  end
-
-  view_name = vim.trim(view_name)
-
-  if view_name and #view_name > 0 then
-    local query = '(get-view-defn ' .. view_name .. ')\n'
-    M.get_db_metadata(query)
-  end
-end
-
-function M.function_defn(func_name)
-  if not func_name or #func_name == 0 then
-    func_name = h.get_word_under_cursor()
-  end
-
-  func_name = vim.trim(func_name)
-
-  if func_name and #func_name > 0 then
-    local query = '(get-function-defn ' .. func_name .. ')\n'
-    M.get_db_metadata(query)
-  end
+  vim.keymap.set({'n', 'v'}, '<localleader>dtt', '<CMD>NeodbaFindTables<CR>', {desc = 'Neodba - Find table to show all records'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dtl', '<CMD>NeodbaGetTables<CR>', {desc = 'Neodba - Get all tables'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dvv', '<CMD>NeodbaFindViewDefinition<CR>', {desc = 'Neodba - Find definition of view'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dvl', '<CMD>NeodbaGetViews<CR>', {desc = 'Neodba - Get all views'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dvd', '<CMD>NeodbaGetViewDefinition<CR>', {desc = 'Neodba - Get current view definition'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dff', '<CMD>NeodbaFindFunctions<CR>', {desc = 'Neodba - Find definition of function'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dfl', '<CMD>NeodbaGetFunctions<CR>', {desc = 'Neodba - Get all functions'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dfd', '<CMD>NeodbaGetFunctionDefinition<CR>', {desc = 'Neodba - Get current function defintion'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dpp', '<CMD>NeodbaFindProcedures<CR>', {desc = 'Neodba - Get all procedures'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dpl', '<CMD>NeodbaGetProcedures<CR>', {desc = 'Neodba - Find definition of procedure'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dpd', '<CMD>NeodbaGetProcedureDefinition<CR>', {desc = 'Neodba - Get current procedure definition'})
 end
 
 return M

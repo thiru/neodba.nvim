@@ -47,7 +47,6 @@ function M.selected_text_in_visual_char_mode(cur_pos_to_restore)
   local sel_lines = vim.api.nvim_buf_get_text(0, start_line, start_col, end_line, end_col, {})
 
   local sel_text_joined = vim.trim(table.concat(sel_lines, ' '))
-  vim.notify('sel_text_joined', vim.log.levels.DEBUG)
 
   return sel_text_joined
 end
@@ -68,7 +67,6 @@ function M.selected_text_in_visual_line_mode(cur_pos_to_restore)
   local sel_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
 
   local sel_text_joined = vim.trim(table.concat(sel_lines, ' '))
-  vim.notify('sel_text_joined', vim.log.levels.DEBUG)
 
   return sel_text_joined
 end
