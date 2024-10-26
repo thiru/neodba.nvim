@@ -314,8 +314,8 @@ function M.show_output_from_file(data)
 
   local last_line = lines[#lines]
 
-  -- Skipping first and last 2 lines since they are essentially metadata
-  local telescope_data = vim.list_slice(lines, 2, (#lines - 2))
+  -- Skipping last 2 lines since they are essentially metadata
+  local telescope_data = vim.list_slice(lines, 1, (#lines - 2))
   local telescope_action = nil
 
   if last_line == M.telescope_cmds.get_functions then
