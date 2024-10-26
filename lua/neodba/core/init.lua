@@ -12,94 +12,94 @@ function M.define_user_commands()
      desc = 'Execute SQL under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetDatabaseInfo',
+    'NeodbaShowDatabaseInfo',
     function() h.get_db_metadata(h.cmds.get_database_info) end,
     {bang = true,
-     desc = 'Get metadata about the database and the current connection to it'})
+     desc = 'Show metadata about the database and the current connection to it'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetCatalogs',
+    'NeodbaShowCatalogs',
     function() h.get_db_metadata(h.cmds.get_catalogs) end,
     {bang = true,
-     desc = 'Get all catalogs'})
+     desc = 'Show all catalogs'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetSchemas',
+    'NeodbaShowSchemas',
     function() h.get_db_metadata(h.cmds.get_schemas) end,
     {bang = true,
-     desc = 'Get all schemas'})
+     desc = 'Show all schemas'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetTables',
+    'NeodbaShowTables',
     function() h.get_db_metadata(h.cmds.get_tables) end,
     {bang = true,
-     desc = 'Get all tables'})
+     desc = 'Show all tables'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaFindTables',
+    'NeodbaSearchTables',
     function() h.get_db_metadata(h.telescope_cmds.get_tables) end,
     {bang = true,
-     desc = 'Find table to show all records'})
+     desc = 'Search tables in Telescope'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetViews',
+    'NeodbaShowViews',
     function() h.get_db_metadata(h.cmds.get_views) end,
     {bang = true,
-     desc = 'Get all views'})
+     desc = 'Show all views'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaFindViewDefinition',
+    'NeodbaSearchViewDefinition',
     function() h.get_db_metadata(h.telescope_cmds.get_views) end,
     {bang = true,
-     desc = 'Find definition of view'})
+     desc = 'Search views in Telescope'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetViewDefinition',
+    'NeodbaShowViewDefinition',
     h.view_defn,
     {bang = true,
-     desc = 'Get definition of view under cursor or what is visually selected'})
+     desc = 'Show definition of view under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetColumnInfo',
+    'NeodbaShowColumnInfo',
     h.column_info,
     {bang = true,
-     desc = 'Get column info for table under cursor or what is visually selected'})
+     desc = 'Show column info for table under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetFunctions',
+    'NeodbaShowFunctions',
     function() h.get_db_metadata(h.cmds.get_functions) end,
     {bang = true,
-     desc = 'Get all functions'})
+     desc = 'Show all functions'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaFindFunctions',
+    'NeodbaSearchFunctions',
     function() h.get_db_metadata(h.telescope_cmds.get_functions) end,
     {bang = true,
-     desc = 'Find definition of function'})
+     desc = 'Search functions in Telescope'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetFunctionDefinition',
+    'NeodbaShowFunctionDefinition',
     h.function_defn,
     {bang = true,
-     desc = 'Get definition of function under cursor or what is visually selected'})
+     desc = 'Show definition of function under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetProcedures',
+    'NeodbaShowProcedures',
     function() h.get_db_metadata(h.cmds.get_procedures) end,
     {bang = true,
-     desc = 'Get all procedures'})
+     desc = 'Show all procedures'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaFindProcedures',
+    'NeodbaSearchProcedures',
     function() h.get_db_metadata(h.telescope_cmds.get_procedures) end,
     {bang = true,
-     desc = 'Find definition of procedure'})
+     desc = 'Search stored procedures in Telescope'})
 
   vim.api.nvim_create_user_command(
-    'NeodbaGetProcedureDefinition',
+    'NeodbaShowProcedureDefinition',
     h.procedure_defn,
     {bang = true,
-     desc = 'Get definition of procedure under cursor or what is visually selected'})
+     desc = 'Show definition of procedure under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaStartProcess',
@@ -123,20 +123,20 @@ end
 function M.set_default_keymaps()
   vim.keymap.set({'n', 'v'}, '<C-CR>', '<CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
   vim.keymap.set('i', '<C-CR>', '<C-O><CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
-  vim.keymap.set('n', '<localleader>dm', '<CMD>NeodbaGetDatabaseInfo<CR>', {desc = 'Neodba - Get database info'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dc', '<CMD>NeodbaGetColumnInfo<CR>', {desc = 'Neodba - Get column info'})
-  vim.keymap.set({'n', 'v'}, '<localleader>ds', '<CMD>NeodbaGetSchemas<CR>', {desc = 'Neodba - Get all schemas'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dtt', '<CMD>NeodbaFindTables<CR>', {desc = 'Neodba - Find table to show all records'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dtl', '<CMD>NeodbaGetTables<CR>', {desc = 'Neodba - Get all tables'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dvv', '<CMD>NeodbaFindViewDefinition<CR>', {desc = 'Neodba - Find definition of view'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dvl', '<CMD>NeodbaGetViews<CR>', {desc = 'Neodba - Get all views'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dvd', '<CMD>NeodbaGetViewDefinition<CR>', {desc = 'Neodba - Get current view definition'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dff', '<CMD>NeodbaFindFunctions<CR>', {desc = 'Neodba - Find definition of function'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dfl', '<CMD>NeodbaGetFunctions<CR>', {desc = 'Neodba - Get all functions'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dfd', '<CMD>NeodbaGetFunctionDefinition<CR>', {desc = 'Neodba - Get current function defintion'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dpp', '<CMD>NeodbaFindProcedures<CR>', {desc = 'Neodba - Get all procedures'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dpl', '<CMD>NeodbaGetProcedures<CR>', {desc = 'Neodba - Find definition of procedure'})
-  vim.keymap.set({'n', 'v'}, '<localleader>dpd', '<CMD>NeodbaGetProcedureDefinition<CR>', {desc = 'Neodba - Get current procedure definition'})
+  vim.keymap.set('n', '<localleader>dm', '<CMD>NeodbaShowDatabaseInfo<CR>', {desc = 'Neodba - Show database info'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dc', '<CMD>NeodbaShowColumnInfo<CR>', {desc = 'Neodba - Show column info'})
+  vim.keymap.set({'n', 'v'}, '<localleader>ds', '<CMD>NeodbaShowSchemas<CR>', {desc = 'Neodba - Show all schemas'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dt', '<CMD>NeodbaSearchTables<CR>', {desc = 'Neodba - Search tables in Telescope'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dT', '<CMD>NeodbaShowTables<CR>', {desc = 'Neodba - Show all tables'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dv', '<CMD>NeodbaSearchViewDefinition<CR>', {desc = 'Neodba - Search views in Telescope'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dV', '<CMD>NeodbaShowViews<CR>', {desc = 'Neodba - Show all views'})
+  vim.keymap.set({'n', 'v'}, '<localleader>ddv', '<CMD>NeodbaShowViewDefinition<CR>', {desc = 'Neodba - Show current view definition'})
+  vim.keymap.set({'n', 'v'}, '<localleader>df', '<CMD>NeodbaSearchFunctions<CR>', {desc = 'Neodba - Search functions in Telescope'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dF', '<CMD>NeodbaShowFunctions<CR>', {desc = 'Neodba - Show all functions'})
+  vim.keymap.set({'n', 'v'}, '<localleader>ddf', '<CMD>NeodbaShowFunctionDefinition<CR>', {desc = 'Neodba - Show current function defintion'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dp', '<CMD>NeodbaSearchProcedures<CR>', {desc = 'Neodba - Search stored procedures in Telescope'})
+  vim.keymap.set({'n', 'v'}, '<localleader>dP', '<CMD>NeodbaShowProcedures<CR>', {desc = 'Neodba - Show definition of procedure'})
+  vim.keymap.set({'n', 'v'}, '<localleader>ddp', '<CMD>NeodbaShowProcedureDefinition<CR>', {desc = 'Neodba - Show current procedure definition'})
 end
 
 return M
