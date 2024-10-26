@@ -327,7 +327,9 @@ function M.show_output_from_file(data)
       M.exec_sql('SELECT * FROM ' .. table_name)
     end
   elseif last_line == M.telescope_cmds.get_views then
-    telescope_action = M.view_defn
+    telescope_action = function(view_name)
+      M.exec_sql('SELECT * FROM ' .. view_name)
+    end
   else
     M.show_ouput_in_split()
   end
