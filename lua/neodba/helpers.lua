@@ -261,7 +261,7 @@ function M.show_output_from_data(data)
 end
 
 function M.show_ouput_in_split()
-  if not state.output_bufnr then
+  if not state.output_bufnr or not vim.api.nvim_buf_is_valid(state.output_bufnr) then
     state.output_bufnr = vim.fn.bufadd('sql-output.md')
   end
 
@@ -272,14 +272,10 @@ function M.show_ouput_in_split()
     vim.api.nvim_set_option_value('wrap', false, {win=state.output_winid})
   end
 
-  if vim.api.nvim_buf_is_valid(state.output_bufnr) then
-    vim.api.nvim_buf_call(state.output_bufnr, function()
-      vim.cmd('edit!')
-      vim.api.nvim_set_option_value('buflisted', false, {buf = state.output_bufnr})
-    end)
-  else
-    vim.notify('Neodba: Failed to show SQL result (buffer is invalid: ' .. state.output_bufnr .. ')', vim.log.levels.ERROR)
-  end
+  vim.api.nvim_buf_call(state.output_bufnr, function()
+    vim.cmd('edit!')
+    vim.api.nvim_set_option_value('buflisted', false, {buf = state.output_bufnr})
+  end)
 end
 
 function M.show_output_in_telescope(opts)
