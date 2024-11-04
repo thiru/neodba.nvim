@@ -1,7 +1,7 @@
-local h = require('neodba.helpers')
+local c = require('neodba.core')
 
 local M = {
-  helpers = h,
+  core = c,
 }
 
 function M.setup()
@@ -12,115 +12,115 @@ end
 function M.define_user_commands()
   vim.api.nvim_create_user_command(
     'NeodbaExecSql',
-    h.exec_sql,
+    c.exec_sql,
     {bang = true,
      desc = 'Execute SQL under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowDatabaseInfo',
-    function() h.get_db_metadata(h.cmds.get_database_info) end,
+    function() c.get_db_metadata(c.cmds.get_database_info) end,
     {bang = true,
      desc = 'Show metadata about the database and the current connection to it'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowCatalogs',
-    function() h.get_db_metadata(h.cmds.get_catalogs) end,
+    function() c.get_db_metadata(c.cmds.get_catalogs) end,
     {bang = true,
      desc = 'Show all catalogs'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowSchemas',
-    function() h.get_db_metadata(h.cmds.get_schemas) end,
+    function() c.get_db_metadata(c.cmds.get_schemas) end,
     {bang = true,
      desc = 'Show all schemas'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowTables',
-    function() h.get_db_metadata(h.cmds.get_tables) end,
+    function() c.get_db_metadata(c.cmds.get_tables) end,
     {bang = true,
      desc = 'Show all tables'})
 
   vim.api.nvim_create_user_command(
     'NeodbaSearchTables',
-    function() h.get_db_metadata(h.telescope_cmds.get_tables) end,
+    function() c.get_db_metadata(c.telescope_cmds.get_tables) end,
     {bang = true,
      desc = 'Search tables in Telescope'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowViews',
-    function() h.get_db_metadata(h.cmds.get_views) end,
+    function() c.get_db_metadata(c.cmds.get_views) end,
     {bang = true,
      desc = 'Show all views'})
 
   vim.api.nvim_create_user_command(
     'NeodbaSearchViewDefinition',
-    function() h.get_db_metadata(h.telescope_cmds.get_views) end,
+    function() c.get_db_metadata(c.telescope_cmds.get_views) end,
     {bang = true,
      desc = 'Search views in Telescope'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowViewDefinition',
-    h.view_defn,
+    c.view_defn,
     {bang = true,
      desc = 'Show definition of view under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowColumnInfo',
-    h.column_info,
+    c.column_info,
     {bang = true,
      desc = 'Show column info for table under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowFunctions',
-    function() h.get_db_metadata(h.cmds.get_functions) end,
+    function() c.get_db_metadata(c.cmds.get_functions) end,
     {bang = true,
      desc = 'Show all functions'})
 
   vim.api.nvim_create_user_command(
     'NeodbaSearchFunctions',
-    function() h.get_db_metadata(h.telescope_cmds.get_functions) end,
+    function() c.get_db_metadata(c.telescope_cmds.get_functions) end,
     {bang = true,
      desc = 'Search functions in Telescope'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowFunctionDefinition',
-    h.function_defn,
+    c.function_defn,
     {bang = true,
      desc = 'Show definition of function under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowProcedures',
-    function() h.get_db_metadata(h.cmds.get_procedures) end,
+    function() c.get_db_metadata(c.cmds.get_procedures) end,
     {bang = true,
      desc = 'Show all procedures'})
 
   vim.api.nvim_create_user_command(
     'NeodbaSearchProcedures',
-    function() h.get_db_metadata(h.telescope_cmds.get_procedures) end,
+    function() c.get_db_metadata(c.telescope_cmds.get_procedures) end,
     {bang = true,
      desc = 'Search stored procedures in Telescope'})
 
   vim.api.nvim_create_user_command(
     'NeodbaShowProcedureDefinition',
-    h.procedure_defn,
+    c.procedure_defn,
     {bang = true,
      desc = 'Show definition of procedure under cursor or what is visually selected'})
 
   vim.api.nvim_create_user_command(
     'NeodbaStartProcess',
-    h.start,
+    c.start,
     {bang = true,
      desc = 'Start the neodba process'})
 
   vim.api.nvim_create_user_command(
     'NeodbaStopProcess',
-    h.stop,
+    c.stop,
     {bang = true,
      desc = 'Stop the neodba process'})
 
   vim.api.nvim_create_user_command(
     'NeodbaRestartProcess',
-    h.restart,
+    c.restart,
     {bang = true,
      desc = 'Restart the neodba process'})
 end
