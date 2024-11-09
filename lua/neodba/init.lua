@@ -8,6 +8,31 @@ function M.setup(opts)
   c.state.opts = opts
   M.define_user_commands()
   M.set_default_keymaps()
+  M.start_lsp_server()
+end
+
+function M.start_lsp_server()
+  print('starting lsp server')
+  local client = vim.lsp.start_client({
+    name = 'neodbalsp',
+    cmd = {'bin/app', 'lsp'},
+    cmd_cwd = '/home/thiru/code/neodba',
+    on_attach = function (client, bufnr)
+      print('neodbalsp attached to bufnr ' .. bufnr)
+    end
+  })
+
+  if not client then
+    vim.notify('Failed to start Neodba\'s LSP server', vim.log.levels.WARN)
+    return
+  end
+
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'sql',
+    callback = function()
+      vim.lsp.buf_attach_client(0, client)
+    end
+  })
 end
 
 function M.define_user_commands()
