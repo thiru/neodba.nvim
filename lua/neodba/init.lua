@@ -4,7 +4,8 @@ local M = {
   core = c,
 }
 
-function M.setup()
+function M.setup(opts)
+  c.state.opts = opts
   M.define_user_commands()
   M.set_default_keymaps()
 end

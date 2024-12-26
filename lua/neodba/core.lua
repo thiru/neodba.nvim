@@ -1,6 +1,7 @@
 local u = require('neodba.utils')
 
 local state = {
+  opts = {},
   output_bufnr = nil,
   output_winid = nil,
   sessions = {},
@@ -261,6 +262,10 @@ function M.show_output_from_data(data)
 end
 
 function M.show_ouput_in_split()
+  if state.opts.pre_hook then
+    state.opts.pre_hook()
+  end
+
   if not state.output_bufnr or not vim.api.nvim_buf_is_valid(state.output_bufnr) then
     state.output_bufnr = vim.fn.bufadd('sql-output.md')
   end
@@ -276,6 +281,10 @@ function M.show_ouput_in_split()
     vim.cmd('edit!')
     vim.api.nvim_set_option_value('buflisted', false, {buf = state.output_bufnr})
   end)
+
+  if state.opts.post_hook then
+    state.opts.post_hook()
+  end
 end
 
 function M.show_output_in_telescope(opts)
