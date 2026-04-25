@@ -127,7 +127,7 @@ function M.define_user_commands()
 end
 
 function M.set_default_keymaps()
-  vim.keymap.set({'n', 'v'}, '<C-CR>', '<CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
+  vim.keymap.set('v', '<C-CR>', '<CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
   vim.keymap.set('i', '<C-CR>', '<C-O><CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
   vim.keymap.set('n', '<localleader>dm', '<CMD>NeodbaShowDatabaseInfo<CR>', {desc = 'Neodba - Show database info'})
   vim.keymap.set({'n', 'v'}, '<localleader>dc', '<CMD>NeodbaShowColumnInfo<CR>', {desc = 'Neodba - Show column info'})
