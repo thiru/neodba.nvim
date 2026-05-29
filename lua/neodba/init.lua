@@ -6,8 +6,20 @@ local M = {
 
 function M.setup(opts)
   c.state.opts = opts
+  M.define_autocmds()
   M.define_user_commands()
   M.set_default_keymaps()
+end
+
+function M.define_autocmds()
+  local group = vim.api.nvim_create_augroup('neodba_keybinds', {clear = true})
+  vim.api.nvim_create_autocmd('FileType', {
+    group = group,
+    pattern = 'sql',
+    callback = function()
+      vim.keymap.set({'n', 'v'}, '<CR>', c.exec_sql, {buffer = true, desc = 'Neodba - Execute SQL'})
+    end,
+  })
 end
 
 function M.define_user_commands()
@@ -127,7 +139,6 @@ function M.define_user_commands()
 end
 
 function M.set_default_keymaps()
-  vim.keymap.set('v', '<C-CR>', '<CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
   vim.keymap.set('i', '<C-CR>', '<C-O><CMD>NeodbaExecSql<CR>', {desc = 'Neodba - Execute SQL'})
   vim.keymap.set('n', '<localleader>dm', '<CMD>NeodbaShowDatabaseInfo<CR>', {desc = 'Neodba - Show database info'})
   vim.keymap.set({'n', 'v'}, '<localleader>dc', '<CMD>NeodbaShowColumnInfo<CR>', {desc = 'Neodba - Show column info'})
