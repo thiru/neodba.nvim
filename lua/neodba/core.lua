@@ -370,10 +370,33 @@ function M.get_sql_to_exec()
     return u.selected_text()
   end
 
-  local orig_cur_pos = vim.fn.getpos('.')
+  -- Get the current paragraph without entering visual mode,
+  -- which would break the <C-O> one-shot-normal-mode mechanism.
+  local cursor_line = vim.fn.line('.')
+  local total_lines = vim.fn.line('$')
 
-  vim.cmd('normal vip')
-  return u.selected_text(orig_cur_pos)
+  -- Find start of paragraph (line after a blank line, or line 1)
+  local start_line = 1
+  for line = cursor_line - 1, 1, -1 do
+    if vim.fn.getline(line):match('^%s*$') then
+      start_line = line + 1
+      break
+    end
+  end
+
+  -- Find end of paragraph (line before a blank line, or last line)
+  local end_line = total_lines
+  for line = cursor_line + 1, total_lines do
+    if vim.fn.getline(line):match('^%s*$') then
+      end_line = line - 1
+      break
+    end
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  local sql = vim.trim(table.concat(lines, ' '))
+
+  return sql
 end
 
 function M.get_word_under_cursor()
@@ -383,10 +406,8 @@ function M.get_word_under_cursor()
     return u.selected_text()
   end
 
-  local orig_cur_pos = vim.fn.getpos('.')
-
-  vim.cmd('normal viw')
-  return u.selected_text(orig_cur_pos)
+  -- Use expand to get the word under cursor without entering visual mode
+  return vim.fn.expand('<cword>')
 end
 
 return M
