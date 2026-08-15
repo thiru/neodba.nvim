@@ -24,9 +24,9 @@ local M = {
     get_views = '(get-views plain)',
   },
   process = {
-    cmd = 'neodba',
     cmd_args = {'repl'},
   },
+  default_bin = 'neodba',
   state = state,
 }
 
@@ -66,11 +66,12 @@ end
 function M.start()
   local session = M.new_session()
 
-  vim.notify('Starting neodba...', vim.log.levels.DEBUG)
+  vim.notify(string.format('Starting %s...', state.opts.bin or M.default_bin),
+             vim.log.levels.INFO)
 
   -- Start process
   local handle, pid = vim.uv.spawn(
-    M.process.cmd,
+    state.opts.bin or M.default_bin,
     { args = M.process.cmd_args,
       cwd = vim.fn.getcwd(),
       stdio = {session.process.stdin, session.process.stdout, session.process.stderr}},
@@ -79,7 +80,12 @@ function M.start()
       session.process.alive = false
     end)
 
-  vim.notify('Neodba started (pid '.. pid .. ')', vim.log.levels.DEBUG)
+  if not handle then
+    vim.notify('Neodba failed to start: ' .. pid, vim.log.levels.ERROR)
+    return nil
+  end
+
+  vim.notify('Neodba started (pid '.. pid .. ')', vim.log.levels.INFO)
 
   session.process.handle = handle
   session.process.pid = pid
@@ -121,7 +127,7 @@ end
 function M.stop()
   local session = M.get_existing_session() or M.start()
 
-  if not session.process.alive then
+  if not session or not session.process.alive then
     return
   end
 
@@ -144,6 +150,10 @@ end
 
 function M.exec_sql(sql)
   local session = M.get_existing_session() or M.start()
+
+  if not session then
+    return
+  end
 
   if not sql or #sql == 0 then
     sql = M.get_sql_to_exec()
