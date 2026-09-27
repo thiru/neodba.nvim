@@ -81,6 +81,50 @@ function M.selected_text(cur_pos_to_restore)
   end
 end
 
+local function urldecode(s)
+  return s and (s:gsub('%%(%x%x)', function(h)
+    return string.char(tonumber(h, 16))
+  end))
+end
+
+--- Parses a postgresql:// connection URL into a connection table.
+--- postgresql://[user[:password]@][host][:port][/dbname]
+function M.parse_pg_url(url)
+  local rest = url:gsub('^postgres://', ''):gsub('^postgresql://', '')
+  local conn = {}
+
+  local userinfo, hostpart = rest:match('^([^@]+)@(.+)$')
+  if not hostpart then
+    hostpart = rest
+  else
+    conn.user, conn.password = userinfo:match('^([^:]+):?(.*)$')
+    if conn.password == '' then
+      conn.password = nil
+    end
+    conn.user = urldecode(conn.user)
+    conn.password = urldecode(conn.password)
+  end
+
+  local hp, db = hostpart:match('^([^/]*)/?(.*)$')
+  if db and db ~= '' then
+    conn.database = urldecode(db:gsub('%?.*$', ''))
+  end
+
+  -- host, optional [ipv6] and optional :port
+  local host, port = hp:match('^(%[[%x:]+%]):?(%d*)$')
+  if host then
+    conn.host = host:gsub('^%[', ''):gsub('%]$', '')
+  else
+    host, port = hp:match('^([^:]*):?(%d*)$')
+    if host and host ~= '' then
+      conn.host = host
+    end
+  end
+  conn.port = tonumber(port)
+
+  return conn
+end
+
 function M.resize_height(percentage)
   local total_height = vim.api.nvim_get_option_value("lines", {}) -
                        vim.api.nvim_get_option_value("cmdheight", {})
